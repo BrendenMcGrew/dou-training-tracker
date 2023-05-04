@@ -23,6 +23,8 @@ model Example {
 // Necessary for Next auth
 model Account {
     id                String  @id @default(cuid())
+    username          String?   @unique
+    password          String?
     userId            String
     type              String
     provider          String
@@ -49,6 +51,7 @@ model Session {
 
 model User {
     id            String    @id @default(cuid())
+    role          String    @default("USER")
     name          String?
     email         String?   @unique
     emailVerified DateTime?
