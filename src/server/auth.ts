@@ -8,6 +8,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import {JWT} from "next-auth/jwt";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -24,9 +25,14 @@ declare module "next-auth" {
     } & DefaultSession["user"];
   }
 
+  interface jwt extends JWT {
+    role: string
+  }
+
+
   interface User {
     // ...other properties
-    role: string;
+    role: string    
   }
 }
 
@@ -36,27 +42,33 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        session.user.role = user.role;
+    jwt({token, user}){
+      console.log(user);
+      console.log(token);
+
+      if (user) {
+
       }
-      return session;
-    },
+
+      return token;
+    }
   },
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: "credentials",
-      type: "credentials",
+      id: "username-login",
+      name: "Login",
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials, req) {
+
         // Add logic here to look up the user from the credentials supplied
-        console.log('hit')
         const user = await prisma.user.findFirst({
           where: {
             accounts: {
@@ -80,6 +92,7 @@ export const authOptions: NextAuthOptions = {
 
         if (user) {
           // Any object returned will be saved in `user` property of the JWT
+          console.log('done')
           return user
         } else {
           console.log('failure')

@@ -10,8 +10,6 @@ type HomeProps = {
 }
 
 const Home: NextPage = (props:HomeProps) => {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
-
   return (
     <>
       <Head>
